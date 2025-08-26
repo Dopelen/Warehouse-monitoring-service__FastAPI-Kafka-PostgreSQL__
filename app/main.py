@@ -22,12 +22,6 @@ async def lifespan(app: FastAPI):
     # Startup логика
     logger.info("🔄 Application startup in progress...")
 
-    # 🔧 Создание таблиц
-    logger.info("🔄 Creating tables")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("✅ Database tables created or already exist")
-
     # 🔧 Проверка подключения к БД
     logger.info("🔄 Opening DB session")
     try:
