@@ -19,10 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 async def lifespan(app: FastAPI):
-    # Startup логика
     logger.info("🔄 Application startup in progress...")
-
-    # 🔧 Проверка подключения к БД
     logger.info("🔄 Opening DB session")
     try:
         async with get_session_context() as session:
@@ -32,25 +29,19 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ DB connection failed: {str(e)}", exc_info=True)
         raise
 
-    # 🔧 Ожидание Kafka
     logger.info("🔄 Waiting for Kafka to become available...")
     await wait_for_kafka_ready()
-
-    # 🔧 Создание Kafka-топика
     logger.info(f"🔄 Ensuring Kafka topic '{settings.KAFKA_TOPIC}' exists...")
     await create_topic_if_not_exists()
 
-    # 🔧 Инициализация Kafka Producer
     kafka_producer = KafkaProducer()
     await kafka_producer.start()
     app.state.kafka_producer = kafka_producer
 
-    # 🔧 Инициализация Kafka Consumer
     kafka_consumer = KafkaConsumer()
     await kafka_consumer.start()
     app.state.kafka_consumer = kafka_consumer
 
-    # Запускаем consumer в фоне
     consumer_task = asyncio.create_task(kafka_consumer.consume())
     app.state.kafka_consumer_task = consumer_task
 
@@ -58,7 +49,6 @@ async def lifespan(app: FastAPI):
 
     logger.info("🔄 Application shutdown in progress...")
 
-    # 🔧 Остановка Kafka Consumer
     if hasattr(app.state, 'kafka_consumer_task'):
         app.state.kafka_consumer_task.cancel()
         try:
@@ -69,7 +59,6 @@ async def lifespan(app: FastAPI):
     if hasattr(app.state, 'kafka_consumer'):
         await app.state.kafka_consumer.stop()
 
-    # 🔧 Остановка Kafka Producer
     if hasattr(app.state, 'kafka_producer'):
         await app.state.kafka_producer.stop()
 

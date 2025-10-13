@@ -1,8 +1,8 @@
-"""init schema
+"""initial migration with enums
 
-Revision ID: f7bdbf3585e5
+Revision ID: 82f711fbd1bd
 Revises: 
-Create Date: 2025-08-25 19:53:45.058556
+Create Date: 2025-10-13 15:39:39.208584
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'f7bdbf3585e5'
+revision: str = '82f711fbd1bd'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,9 +24,9 @@ def upgrade() -> None:
     op.create_table('movements',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('source', sa.String(), nullable=False),
-    sa.Column('specversion', sa.String(), nullable=False),
-    sa.Column('type', sa.String(), nullable=False),
-    sa.Column('datacontenttype', sa.String(), nullable=False),
+    sa.Column('specversion', sa.Enum('V1_0', name='specversion'), nullable=False),
+    sa.Column('type', sa.Enum('WAREHOUSE_MOVEMENT', name='eventtype'), nullable=False),
+    sa.Column('datacontenttype', sa.Enum('JSON', name='datacontenttype'), nullable=False),
     sa.Column('dataschema', sa.String(), nullable=False),
     sa.Column('time', sa.BigInteger(), nullable=False),
     sa.Column('subject', sa.String(), nullable=False),

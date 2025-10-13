@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from uuid import UUID
 from datetime import datetime
-from app.models.enums import MovementEvent
+from app.models.enums import EventType, DataContentType, SpecVersion, MovementEvent
+import re
 
 
 class KafkaMovementData(BaseModel):
@@ -15,46 +16,53 @@ class KafkaMovementData(BaseModel):
 
 class KafkaMovementMessage(BaseModel):
     id: UUID = Field(..., description="ID сообщения")
-    source: str = Field(..., description="Источник сообщения")
-    specversion: str = Field(..., description="Версия спецификации")
-    type: str = Field(..., description="Тип события")
-    datacontenttype: str = Field(..., description="Тип содержимого")
+    source: str = Field(..., description="Источник сообщения (WH-****)")
+    specversion: SpecVersion = Field(..., description="Версия спецификации")
+    type: EventType = Field(..., description="Тип события")
+    datacontenttype: DataContentType = Field(..., description="Тип содержимого")
     dataschema: str = Field(..., description="Ссылка на схему данных")
     time: int = Field(..., description="Время события в миллисекундах UNIX")
     subject: str = Field(..., description="Тема события")
     destination: str = Field(..., description="Получатель события")
     data: KafkaMovementData = Field(..., description="Данные перемещения")
 
-    class Config:
-        json_schema_extra = {
+    @field_validator("source")
+    def validate_source(cls, v):
+        if not re.match(r"^WH-\d{4}$", v):
+            raise ValueError("source должно быть в формате WH-****")
+        return v
+
+    model_config = {
+        "json_schema_extra": {
             "example": {
-                "id": "39df66b2-a5ac-43d9-995e-d4a05142d6d9",
-                "source": "inventory-service",
+                "id": "b3b53031-e83a-4654-87f5-b6b6fb09fd99",
+                "source": "WH-3423",
                 "specversion": "1.0",
-                "type": "inventory.movement",
+                "type": "ru.retail.warehouses.movement",
                 "datacontenttype": "application/json",
-                "dataschema": "/schemas/movement",
-                "time": 1721906400000,
-                "subject": "warehouse.sync",
-                "destination": "movement-processor",
+                "dataschema": "ru.retail.warehouses.movement.v1.0",
+                "time": 1737439421623,
+                "subject": "WH-3423:ARRIVAL",
+                "destination": "ru.retail.warehouses",
                 "data": {
-                    "movement_id": "77900d3c-8d3a-4421-97d7-297e995b516d",
-                    "warehouse_id": "7689ba85-8a97-46dd-a7bf-b5e47b3f0acf",
-                    "product_id": "2b898dd7-525e-4548-9a5c-41cfcda38a30",
+                    "movement_id": "c6290746-790e-43fa-8270-014dc90e02e0",
+                    "warehouse_id": "c1d70455-7e14-11e9-812a-70106f431230",
+                    "product_id": "4705204f-498f-4f96-b4ba-df17fb56bf55",
                     "quantity": 100,
                     "event": "arrival",
-                    "timestamp": "2025-07-25T10:00:00Z"
+                    "timestamp": "2025-02-18T14:34:56Z"
                 }
             }
         }
+    }
 
 
 class FlatMovementMessage(BaseModel):
     id: UUID = Field(..., description="ID сообщения")
-    source: str = Field(..., description="Источник сообщения")
-    specversion: str = Field(..., description="Версия спецификации")
-    type: str = Field(..., description="Тип события")
-    datacontenttype: str = Field(..., description="Тип содержимого")
+    source: str = Field(..., description="Источник сообщения (WH-****)")
+    specversion: SpecVersion = Field(..., description="Версия спецификации")
+    type: EventType = Field(..., description="Тип события")
+    datacontenttype: DataContentType = Field(..., description="Тип содержимого")
     dataschema: str = Field(..., description="Ссылка на схему данных")
     time: int = Field(..., description="Время события в миллисекундах UNIX")
     subject: str = Field(..., description="Тема события")
@@ -67,27 +75,33 @@ class FlatMovementMessage(BaseModel):
     event: MovementEvent = Field(..., description="Тип события")
     timestamp: datetime = Field(..., description="Время события")
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "id": "39df66b2-a5ac-43d9-995e-d4a05142d6d9",
-                "source": "inventory-service",
-                "specversion": "1.0",
-                "type": "inventory.movement",
-                "datacontenttype": "application/json",
-                "dataschema": "/schemas/movement",
-                "time": 1721906400000,
-                "subject": "warehouse.sync",
-                "destination": "movement-processor",
+    @field_validator("source")
+    def validate_source(cls, v):
+        if not re.match(r"^WH-\d{4}$", v):
+            raise ValueError("source должно быть в формате WH-****")
+        return v
 
-                "movement_id": "77900d3c-8d3a-4421-97d7-297e995b516d",
-                "warehouse_id": "7689ba85-8a97-46dd-a7bf-b5e47b3f0acf",
-                "product_id": "2b898dd7-525e-4548-9a5c-41cfcda38a30",
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "id": "b3b53031-e83a-4654-87f5-b6b6fb09fd99",
+                "source": "WH-3423",
+                "specversion": "1.0",
+                "type": "ru.retail.warehouses.movement",
+                "datacontenttype": "application/json",
+                "dataschema": "ru.retail.warehouses.movement.v1.0",
+                "time": 1737439421623,
+                "subject": "WH-3423:ARRIVAL",
+                "destination": "ru.retail.warehouses",
+                "movement_id": "c6290746-790e-43fa-8270-014dc90e02e0",
+                "warehouse_id": "c1d70455-7e14-11e9-812a-70106f431230",
+                "product_id": "4705204f-498f-4f96-b4ba-df17fb56bf55",
                 "quantity": 100,
                 "event": "arrival",
-                "timestamp": "2025-07-25T10:00:00Z"
+                "timestamp": "2025-02-18T14:34:56Z"
             }
         }
+    }
 
 
 class MovementCreate(FlatMovementMessage):
@@ -106,8 +120,9 @@ class MovementInfoResponse(BaseModel):
     time_diff_seconds: float = Field(..., description="Разница во времени между отправкой и приемкой (в секундах)")
     quantity_difference: int = Field(..., description="Разница в количестве между отправкой и приемкой")
 
-    class Config:
-        json_schema_extra = {
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
             "example": {
                 "movement_id": "29a1adda-8c55-46f2-a2a5-644bd03d6db9",
                 "from_warehouse": "ce6e83c5-f734-4981-bfe5-d3c1dc45350d",
@@ -116,3 +131,4 @@ class MovementInfoResponse(BaseModel):
                 "quantity_difference": 0
             }
         }
+    }

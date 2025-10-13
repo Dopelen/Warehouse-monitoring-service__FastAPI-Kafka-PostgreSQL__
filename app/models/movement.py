@@ -2,7 +2,7 @@ import uuid
 from sqlalchemy import Column, DateTime, Enum, Integer, String, BigInteger
 from sqlalchemy.dialects.postgresql import UUID
 from app.db.base import Base
-from app.models.enums import MovementEvent
+from app.models.enums import MovementEvent, EventType, SpecVersion, DataContentType
 
 
 class Movement(Base):
@@ -10,9 +10,9 @@ class Movement(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     source = Column(String, nullable=False)
-    specversion = Column(String, nullable=False)
-    type = Column(String, nullable=False)
-    datacontenttype = Column(String, nullable=False)
+    specversion = Column(Enum(SpecVersion), nullable=False)
+    type = Column(Enum(EventType), nullable=False)
+    datacontenttype = Column(Enum(DataContentType), nullable=False)
     dataschema = Column(String, nullable=False)
     time = Column(BigInteger, nullable=False)
     subject = Column(String, nullable=False)
