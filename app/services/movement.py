@@ -49,7 +49,7 @@ async def get_movement_info(movement_id: UUID, db: AsyncSession) -> MovementInfo
     if len(movements) != 2:
         raise HTTPException(status_code=404, detail="Movement pair not found")
 
-    movement_map = {m.event: m for m in movements}
+    movement_map = {m.event.value: m for m in movements}  # используем .value для Enum
     if "departure" not in movement_map or "arrival" not in movement_map:
         raise HTTPException(status_code=400, detail="Invalid movement pair")
 
@@ -59,10 +59,10 @@ async def get_movement_info(movement_id: UUID, db: AsyncSession) -> MovementInfo
     time_diff = arrival.timestamp - departure.timestamp
     quantity_diff = departure.quantity - arrival.quantity
 
-    return MovementInfoResponse(
-        movement_id=movement_id,
-        from_warehouse=departure.warehouse_id,
-        to_warehouse=arrival.warehouse_id,
-        time_diff_seconds=time_diff.total_seconds(),
-        quantity_difference=quantity_diff,
-    )
+    return MovementInfoResponse.model_validate({
+        "movement_id": movement_id,
+        "from_warehouse": departure.warehouse_id,
+        "to_warehouse": arrival.warehouse_id,
+        "time_diff_seconds": time_diff.total_seconds(),
+        "quantity_difference": quantity_diff,
+    })

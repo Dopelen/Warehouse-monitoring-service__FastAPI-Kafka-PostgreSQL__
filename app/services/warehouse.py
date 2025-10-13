@@ -22,8 +22,4 @@ async def get_warehouse_stock(
             detail="Склад или товар не найдены"
         )
 
-    return WarehouseStockResponse(
-        warehouse_id=warehouse_id,
-        product_id=product_id,
-        quantity=state.quantity,
-    )
+    return WarehouseStockResponse.model_validate(state)

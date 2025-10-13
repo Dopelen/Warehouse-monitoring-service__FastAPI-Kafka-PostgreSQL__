@@ -25,7 +25,6 @@ services:
   db:
     image: postgres:15
     container_name: warehouse_postgres
-    restart: always
     environment:
       POSTGRES_USER: warehouse_user
       POSTGRES_PASSWORD: warehouse_pass
@@ -34,6 +33,21 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: warehouse_app
+    depends_on:
+      - db
+      - kafka
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "poetry run alembic upgrade head &&
+             poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
 
 volumes:
   kafka_data:
