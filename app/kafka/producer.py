@@ -27,6 +27,6 @@ class KafkaProducer:
     async def send_movement(self, movement: KafkaMovementMessage):
         if self._producer is None:
             raise RuntimeError("Kafka producer is not started")
-        message = json.dumps(movement.dict(), default=str).encode("utf-8")
+        message = json.dumps(movement.model_dump(mode="json")).encode("utf-8")
         await self._producer.send_and_wait(settings.KAFKA_TOPIC, message)
         logger.info(f"📤 Kafka message with ID {movement.id} was sent")

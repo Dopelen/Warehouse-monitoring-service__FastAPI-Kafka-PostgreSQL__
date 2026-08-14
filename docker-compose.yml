@@ -1,4 +1,5 @@
-version: '3.8'
+# имя проекта задаём явно: из имени папки с `__` docker выводит невалидное имя образа
+name: warehouse
 
 services:
   kafka:
@@ -33,13 +34,20 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U warehouse_user -d warehouse_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   app:
     build: .
     container_name: warehouse_app
     depends_on:
-      - db
-      - kafka
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
     env_file:
       - .env
     ports:

@@ -1,6 +1,7 @@
 from app.logging_config import setup_logging
 import logging
 import asyncio
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
@@ -18,6 +19,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
+@asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("🔄 Application startup in progress...")
     logger.info("🔄 Opening DB session")

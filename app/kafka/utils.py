@@ -17,16 +17,15 @@ async def create_topic_if_not_exists():
     await admin.start()
     try:
         existing_topics = await admin.list_topics()
-        if settings.KAFKA_TOPIC not in existing_topics:
-            topic = NewTopic(
-                name=settings.KAFKA_TOPIC,
-                num_partitions=1,
-                replication_factor=1
-            )
-            await admin.create_topics([topic])
-            logger.info(f"✅ Kafka topic '{settings.KAFKA_TOPIC}' created.")
-        else:
-            logger.info(f"ℹ️ Kafka topic '{settings.KAFKA_TOPIC}' already exists.")
+        # основной топик и DLQ создаём одинаково, отдельным циклом чтобы не дублировать код
+        for topic_name in (settings.KAFKA_TOPIC, settings.KAFKA_DLQ_TOPIC):
+            if topic_name not in existing_topics:
+                await admin.create_topics([
+                    NewTopic(name=topic_name, num_partitions=1, replication_factor=1)
+                ])
+                logger.info(f"✅ Kafka topic '{topic_name}' created.")
+            else:
+                logger.info(f"ℹ️ Kafka topic '{topic_name}' already exists.")
     finally:
         await admin.close()
 

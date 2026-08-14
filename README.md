@@ -75,6 +75,27 @@
 4. Провести нагрузочное тестирование и предоставить график, иллюстрирующий, как приложение ведет себя под разной нагрузкой.
 
 
+## Схема работы
+
+Запись идёт асинхронно через Kafka (клиент только публикует сообщение, БД обновляет консьюмер), чтение — напрямую из БД. Ошибки обработки не теряются, а уходят в DLQ.
+
+```mermaid
+flowchart LR
+    subgraph W["Запись — асинхронно через Kafka"]
+        direction LR
+        C1[Клиент] -->|POST /send| API1["FastAPI<br/>producer"]
+        API1 -->|produce| T[("warehouse-topic<br/>Kafka")]
+        T -->|consume| CONS["Consumer<br/>идемпотентность · ретрай"]
+        CONS -->|create_movement| DB1[("PostgreSQL<br/>movements · states")]
+        CONS -. "при ошибке<br/>validation · inventory · db" .-> DLQ[("warehouse-topic.DLQ")]
+    end
+    subgraph R["Чтение — напрямую из БД"]
+        direction LR
+        C2[Клиент] -->|"GET /movements/{id}<br/>GET /warehouses/{id}/products/{id}"| API2["FastAPI<br/>read endpoints"]
+        API2 -->|select| DB2[("PostgreSQL")]
+    end
+```
+
 ## Спецификация API
 
 ### Основные эндпоинты:
